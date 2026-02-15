@@ -48,14 +48,14 @@ func (cmd *RankingsCheckCmd) Run(ctx context.Context) error {
 		return outfmt.WriteJSON(os.Stdout, result)
 	}
 	if outfmt.IsPlain(ctx) {
-		reportID := fmt.Sprintf("%d", result.ReportID)
-		headers := []string{"REPORT_ID", "TERM", "RANK", "URL", "SOURCE"}
+		headers := []string{"REQUEST_ID", "TERM", "RANK", "URL", "SOURCE"}
 		var rows [][]string
 		for _, r := range result.Results {
-			rows = append(rows, []string{reportID, r.SearchTerm, fmt.Sprintf("%d", r.Rank), r.URL, r.Source})
+			rows = append(rows, []string{result.RequestID, r.SearchTerm, fmt.Sprintf("%d", r.Rank), r.URL, r.Source})
 		}
 		if len(rows) == 0 {
-			rows = append(rows, []string{reportID, "", "", "", ""})
+			rows = append(rows, []string{result.RequestID, "", "", "", ""})
+
 		}
 		return outfmt.WritePlain(os.Stdout, headers, rows)
 	}
@@ -99,14 +99,14 @@ func (cmd *RankingsGetCmd) Run(ctx context.Context) error {
 		return outfmt.WriteJSON(os.Stdout, result)
 	}
 	if outfmt.IsPlain(ctx) {
-		reportID := fmt.Sprintf("%d", result.ReportID)
-		headers := []string{"REPORT_ID", "STATUS", "TERM", "RANK", "URL", "SOURCE"}
+		headers := []string{"REQUEST_ID", "STATUS", "TERM", "RANK", "URL", "SOURCE"}
 		var rows [][]string
 		for _, r := range result.Results {
-			rows = append(rows, []string{reportID, result.Status, r.SearchTerm, fmt.Sprintf("%d", r.Rank), r.URL, r.Source})
+			rows = append(rows, []string{result.RequestID, result.Status, r.SearchTerm, fmt.Sprintf("%d", r.Rank), r.URL, r.Source})
 		}
 		if len(rows) == 0 {
-			rows = append(rows, []string{reportID, result.Status, "", "", "", ""})
+			rows = append(rows, []string{result.RequestID, result.Status, "", "", "", ""})
+
 		}
 		return outfmt.WritePlain(os.Stdout, headers, rows)
 	}

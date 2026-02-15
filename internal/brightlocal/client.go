@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/builtbyrobben/brightlocal-cli/internal/api"
 )
@@ -102,7 +103,7 @@ func (s *RankingsService) Get(ctx context.Context, requestID string) (*RankingsG
 
 	var result RankingsGetResponse
 
-	path := fmt.Sprintf("/rankings/results/%s", requestID)
+	path := fmt.Sprintf("/rankings/results/%s", url.PathEscape(requestID))
 	if err := s.client.Get(ctx, path, &result); err != nil {
 		return nil, fmt.Errorf("get rankings: %w", err)
 	}

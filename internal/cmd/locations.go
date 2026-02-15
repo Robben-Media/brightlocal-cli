@@ -40,7 +40,7 @@ func (cmd *LocationsSearchCmd) Run(ctx context.Context) error {
 	if outfmt.IsPlain(ctx) {
 		headers := []string{"ID", "NAME", "ADDRESS", "CITY", "STATE", "COUNTRY"}
 		var rows [][]string
-		for _, loc := range result.Locations {
+		for _, loc := range result.Items {
 			rows = append(rows, []string{loc.ID, loc.Name, loc.Address, loc.City, loc.State, loc.Country})
 		}
 		return outfmt.WritePlain(os.Stdout, headers, rows)
