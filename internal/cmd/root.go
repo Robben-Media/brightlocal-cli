@@ -9,22 +9,17 @@ import (
 
 	"github.com/alecthomas/kong"
 
-	"github.com/builtbyrobben/cli-template/internal/errfmt"
-	"github.com/builtbyrobben/cli-template/internal/outfmt"
-)
-
-const (
-	colorAuto  = "auto"
-	colorNever = "never"
+	"github.com/builtbyrobben/brightlocal-cli/internal/errfmt"
+	"github.com/builtbyrobben/brightlocal-cli/internal/outfmt"
 )
 
 type RootFlags struct {
-	Color          string `help:"Color output: auto|always|never" default:"${color}"`
-	JSON           bool   `help:"Output JSON to stdout (best for scripting)" default:"${json}"`
-	Plain          bool   `help:"Output stable, parseable text to stdout (TSV; no colors)" default:"${plain}"`
-	Force          bool   `help:"Skip confirmations for destructive commands"`
-	NoInput        bool   `help:"Never prompt; fail instead (useful for CI)"`
-	Verbose        bool   `help:"Enable verbose logging"`
+	Color   string `help:"Color output: auto|always|never" default:"${color}"`
+	JSON    bool   `help:"Output JSON to stdout (best for scripting)" default:"${json}"`
+	Plain   bool   `help:"Output stable, parseable text to stdout (TSV; no colors)" default:"${plain}"`
+	Force   bool   `help:"Skip confirmations for destructive commands"`
+	NoInput bool   `help:"Never prompt; fail instead (useful for CI)"`
+	Verbose bool   `help:"Enable verbose logging"`
 }
 
 type CLI struct {
@@ -32,6 +27,10 @@ type CLI struct {
 
 	Version    kong.VersionFlag `help:"Print version and exit"`
 	Auth       AuthCmd          `cmd:"" help:"Auth and credentials"`
+	Locations  LocationsCmd     `cmd:"" help:"Location search operations"`
+	Rankings   RankingsCmd      `cmd:"" help:"Ranking check operations"`
+	Citations  CitationsCmd     `cmd:"" help:"Citation audit operations"`
+	Reports    ReportsCmd       `cmd:"" help:"Report management"`
 	VersionCmd VersionCmd       `cmd:"" name:"version" help:"Print version"`
 }
 
@@ -118,9 +117,9 @@ func boolString(v bool) string {
 }
 
 func newParser(description string) (*kong.Kong, *CLI, error) {
-	envMode := outfmt.FromEnv("PLACEHOLDER_CLI")
+	envMode := outfmt.FromEnv("BRIGHTLOCAL_CLI")
 	vars := kong.Vars{
-		"color":   envOr("PLACEHOLDER_CLI_COLOR", "auto"),
+		"color":   envOr("BRIGHTLOCAL_CLI_COLOR", "auto"),
 		"json":    boolString(envMode.JSON),
 		"plain":   boolString(envMode.Plain),
 		"version": VersionString(),
@@ -129,7 +128,7 @@ func newParser(description string) (*kong.Kong, *CLI, error) {
 	cli := &CLI{}
 	parser, err := kong.New(
 		cli,
-		kong.Name("placeholder-cli"),
+		kong.Name("brightlocal-cli"),
 		kong.Description(description),
 		kong.ConfigureHelp(kong.HelpOptions{
 			Compact: true,
@@ -146,7 +145,7 @@ func newParser(description string) (*kong.Kong, *CLI, error) {
 }
 
 func helpDescription() string {
-	return "Placeholder CLI - Replace with your service description"
+	return "BrightLocal CLI - Local SEO rankings, citations, and reports"
 }
 
 // newUsageError wraps errors in a way main() can map to exit code 2.

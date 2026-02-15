@@ -15,6 +15,7 @@ type Client struct {
 	baseURL    string
 	apiKey     string
 	userAgent  string
+	authHeader string
 }
 
 type ClientOption func(*Client)
@@ -37,13 +38,21 @@ func WithTimeout(timeout time.Duration) ClientOption {
 	}
 }
 
+// WithAuthHeader sets a custom auth header name (e.g. "x-api-key").
+// If not set, defaults to "Authorization: Bearer <key>".
+func WithAuthHeader(name string) ClientOption {
+	return func(c *Client) {
+		c.authHeader = name
+	}
+}
+
 func NewClient(apiKey string, opts ...ClientOption) *Client {
 	c := &Client{
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
 		apiKey:    apiKey,
-		userAgent: "placeholder-cli/1.0",
+		userAgent: "brightlocal-cli/1.0",
 		baseURL:   "https://api.example.com",
 	}
 
@@ -63,15 +72,18 @@ type Request struct {
 
 func (c *Client) Do(ctx context.Context, req Request) (*http.Response, error) {
 	var bodyReader io.Reader
+
 	if req.Body != nil {
 		bodyBytes, err := json.Marshal(req.Body)
 		if err != nil {
 			return nil, fmt.Errorf("marshal request body: %w", err)
 		}
+
 		bodyReader = bytes.NewReader(bodyBytes)
 	}
 
 	url := c.baseURL + req.Path
+
 	httpReq, err := http.NewRequestWithContext(ctx, req.Method, url, bodyReader)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
@@ -81,9 +93,14 @@ func (c *Client) Do(ctx context.Context, req Request) (*http.Response, error) {
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("User-Agent", c.userAgent)
 
-	// Set API key header (override in specific CLI implementations)
+	// Set API key header
 	if c.apiKey != "" {
-		httpReq.Header.Set("Authorization", "Bearer "+c.apiKey)
+		switch {
+		case c.authHeader != "":
+			httpReq.Header.Set(c.authHeader, c.apiKey)
+		default:
+			httpReq.Header.Set("Authorization", "Bearer "+c.apiKey)
+		}
 	}
 
 	// Set custom headers
@@ -168,6 +185,7 @@ func parseAPIError(resp *http.Response) error {
 		if msg == "" {
 			msg = apiErr.Error
 		}
+
 		if msg != "" {
 			return &APIError{StatusCode: resp.StatusCode, Message: msg}
 		}

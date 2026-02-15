@@ -1,8 +1,6 @@
-# placeholder-cli
+# brightlocal-cli
 
-<!-- Replace with your CLI description -->
-
-A CLI tool for [SERVICE_NAME] built with Go.
+Command-line interface for the BrightLocal API. Manage local SEO rankings, citation audits, location searches, and reports from your terminal.
 
 ## Installation
 
@@ -10,83 +8,149 @@ A CLI tool for [SERVICE_NAME] built with Go.
 
 ```bash
 brew tap builtbyrobben/tap
-brew install placeholder-cli
+brew install brightlocal-cli
 ```
 
 ### Download Binary
 
-Download the latest release from [GitHub Releases](https://github.com/builtbyrobben/placeholder-cli/releases).
+Download the latest release from [GitHub Releases](https://github.com/builtbyrobben/brightlocal-cli/releases).
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/builtbyrobben/placeholder-cli.git
-cd placeholder-cli
+git clone https://github.com/builtbyrobben/brightlocal-cli.git
+cd brightlocal-cli
 make build
 ```
 
-## Authentication
+## Configuration
 
-### Set API Key
+brightlocal-cli authenticates via a BrightLocal API key. You can provide it in two ways:
+
+**Environment variable (recommended for CI/scripts):**
 
 ```bash
-# Interactive (secure, recommended)
-placeholder-cli auth set-key --stdin
-
-# From environment variable
-echo $API_KEY | placeholder-cli auth set-key --stdin
-
-# From argument (discouraged - exposes in shell history)
-placeholder-cli auth set-key YOUR_API_KEY
+export BRIGHTLOCAL_API_KEY="your-api-key"
 ```
 
-### Check Status
+**Keyring storage (recommended for interactive use):**
 
 ```bash
-placeholder-cli auth status
-```
+# Interactive prompt (secure)
+brightlocal-cli auth set-key --stdin
 
-### Remove Credentials
-
-```bash
-placeholder-cli auth remove
+# Pipe from environment
+echo "$BRIGHTLOCAL_API_KEY" | brightlocal-cli auth set-key --stdin
 ```
 
 ### Environment Variables
 
-- `PLACEHOLDER_CLI_API_KEY` - Override stored credentials
-- `PLACEHOLDER_CLI_KEYRING_BACKEND` - Force keyring backend (auto/keychain/file)
-- `PLACEHOLDER_CLI_KEYRING_PASS` - Password for file backend (headless systems)
+| Variable | Description |
+|----------|-------------|
+| `BRIGHTLOCAL_API_KEY` | API key (overrides keyring) |
+| `BRIGHTLOCAL_CLI_COLOR` | Color output: `auto`, `always`, `never` |
+| `BRIGHTLOCAL_CLI_OUTPUT` | Default output mode: `json`, `plain` |
 
-## Usage
+## Global Flags
 
-<!-- Add your CLI usage examples here -->
+| Flag | Description |
+|------|-------------|
+| `--json` | Output JSON to stdout (best for scripting) |
+| `--plain` | Output stable, parseable text (TSV; no colors) |
+| `--color` | Color output: `auto`, `always`, `never` |
+| `--verbose` | Enable verbose logging |
+| `--force` | Skip confirmations for destructive commands |
+| `--no-input` | Never prompt; fail instead (useful for CI) |
+
+## Commands
+
+### auth
+
+Manage authentication credentials.
 
 ```bash
-placeholder-cli --help
+# Store API key in system keyring
+brightlocal-cli auth set-key --stdin
+
+# Check authentication status
+brightlocal-cli auth status
+
+# Remove stored credentials
+brightlocal-cli auth remove
 ```
 
-## Development
+### locations
 
-### Prerequisites
-
-- Go 1.22+
-- Make
-
-### Commands
+Search for locations.
 
 ```bash
-make build        # Build binary
-make test         # Run tests
-make lint         # Run linter
-make ci           # Run full CI suite
-make tools        # Install dev tools
+# Search for a location
+brightlocal-cli locations search --query "Columbia, MO"
+
+# Specify country (default: USA)
+brightlocal-cli locations search --query "London" --country GBR
+
+# Limit results
+brightlocal-cli locations search --query "New York" --limit 5
+
+# Output as JSON
+brightlocal-cli locations search --query "Columbia, MO" --json
+```
+
+### rankings
+
+Check local search rankings for a business.
+
+```bash
+# Check rankings for specific search terms
+brightlocal-cli rankings check --business "Joe's Pizza" --location "Columbia, MO" --terms "pizza,best pizza,pizza delivery"
+
+# Get a rankings report by ID
+brightlocal-cli rankings get 12345
+
+# Output as JSON
+brightlocal-cli rankings check --business "Joe's Pizza" --location "Columbia, MO" --terms "pizza" --json
+```
+
+### citations
+
+Run citation audits for a business.
+
+```bash
+# Run a citation audit
+brightlocal-cli citations audit --business "Joe's Pizza" --location "Columbia, MO"
+
+# Output as JSON
+brightlocal-cli citations audit --business "Joe's Pizza" --location "Columbia, MO" --json
+```
+
+### reports
+
+Manage BrightLocal reports.
+
+```bash
+# List all reports
+brightlocal-cli reports list
+
+# List with pagination
+brightlocal-cli reports list --page 2 --page-size 20
+
+# Create a new report
+brightlocal-cli reports create --name "Q1 Rankings" --type rankings
+brightlocal-cli reports create --name "Citation Audit" --type citations
+
+# Output as JSON
+brightlocal-cli reports list --json
+```
+
+### version
+
+Print version information.
+
+```bash
+brightlocal-cli version
 ```
 
 ## License
 
 MIT
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
