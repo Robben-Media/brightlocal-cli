@@ -12,7 +12,7 @@ import (
 
 type RankingsCmd struct {
 	Check RankingsCheckCmd `cmd:"" help:"Check rankings for a business"`
-	Get   RankingsGetCmd   `cmd:"" help:"Get rankings results by report ID"`
+	Get   RankingsGetCmd   `cmd:"" help:"Get rankings results by request ID"`
 }
 
 type RankingsCheckCmd struct {
@@ -61,7 +61,7 @@ func (cmd *RankingsCheckCmd) Run(ctx context.Context) error {
 	}
 
 	fmt.Fprintf(os.Stderr, "Rankings check submitted\n\n")
-	fmt.Printf("Report ID: %d\n", result.ReportID)
+	fmt.Printf("Request ID: %s\n", result.RequestID)
 
 	if len(result.Results) > 0 {
 		fmt.Println()
@@ -81,7 +81,7 @@ func (cmd *RankingsCheckCmd) Run(ctx context.Context) error {
 }
 
 type RankingsGetCmd struct {
-	ReportID int `arg:"" required:"" help:"Report ID"`
+	RequestID string `arg:"" required:"" help:"Request ID (UUID)"`
 }
 
 func (cmd *RankingsGetCmd) Run(ctx context.Context) error {
@@ -90,7 +90,7 @@ func (cmd *RankingsGetCmd) Run(ctx context.Context) error {
 		return err
 	}
 
-	result, err := client.Rankings().Get(ctx, cmd.ReportID)
+	result, err := client.Rankings().Get(ctx, cmd.RequestID)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func (cmd *RankingsGetCmd) Run(ctx context.Context) error {
 		return outfmt.WritePlain(os.Stdout, headers, rows)
 	}
 
-	fmt.Printf("Report ID: %d\n", result.ReportID)
+	fmt.Printf("Request ID: %s\n", result.RequestID)
 	fmt.Printf("Status: %s\n", result.Status)
 
 	if len(result.Results) > 0 {

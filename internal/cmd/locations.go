@@ -46,13 +46,13 @@ func (cmd *LocationsSearchCmd) Run(ctx context.Context) error {
 		return outfmt.WritePlain(os.Stdout, headers, rows)
 	}
 
-	if len(result.Locations) == 0 {
+	if len(result.Items) == 0 {
 		fmt.Fprintln(os.Stderr, "No locations found")
 		return nil
 	}
 
-	fmt.Fprintf(os.Stderr, "Found %d locations\n\n", len(result.Locations))
-	for _, loc := range result.Locations {
+	fmt.Fprintf(os.Stderr, "Found %d of %d locations\n\n", len(result.Items), result.TotalCount)
+	for _, loc := range result.Items {
 		fmt.Printf("ID: %s\n", loc.ID)
 		if loc.Name != "" {
 			fmt.Printf("  Name: %s\n", loc.Name)
