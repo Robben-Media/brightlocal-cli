@@ -108,7 +108,7 @@ func (s *RankingsService) Check(ctx context.Context, req RankingsCheckRequest) (
 
 // Get retrieves a rankings report by ID.
 func (s *RankingsService) Get(ctx context.Context, reportID int) (*RankingsGetResponse, error) {
-	if reportID == 0 {
+	if reportID <= 0 {
 		return nil, errReportIDRequired
 	}
 

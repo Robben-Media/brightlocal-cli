@@ -27,9 +27,12 @@ func (cmd *RankingsCheckCmd) Run(ctx context.Context) error {
 		return err
 	}
 
-	terms := strings.Split(cmd.Terms, ",")
-	for i, term := range terms {
-		terms[i] = strings.TrimSpace(term)
+	var terms []string
+	for _, term := range strings.Split(cmd.Terms, ",") {
+		t := strings.TrimSpace(term)
+		if t != "" {
+			terms = append(terms, t)
+		}
 	}
 
 	result, err := client.Rankings().Check(ctx, brightlocal.RankingsCheckRequest{
