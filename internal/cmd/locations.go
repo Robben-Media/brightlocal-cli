@@ -40,19 +40,19 @@ func (cmd *LocationsSearchCmd) Run(ctx context.Context) error {
 	if outfmt.IsPlain(ctx) {
 		headers := []string{"ID", "NAME", "ADDRESS", "CITY", "STATE", "COUNTRY"}
 		var rows [][]string
-		for _, loc := range result.Items {
+		for _, loc := range result.Locations {
 			rows = append(rows, []string{loc.ID, loc.Name, loc.Address, loc.City, loc.State, loc.Country})
 		}
 		return outfmt.WritePlain(os.Stdout, headers, rows)
 	}
 
-	if len(result.Items) == 0 {
+	if len(result.Locations) == 0 {
 		fmt.Fprintln(os.Stderr, "No locations found")
 		return nil
 	}
 
-	fmt.Fprintf(os.Stderr, "Found %d of %d locations\n\n", len(result.Items), result.TotalCount)
-	for _, loc := range result.Items {
+	fmt.Fprintf(os.Stderr, "Found %d locations\n\n", len(result.Locations))
+	for _, loc := range result.Locations {
 		fmt.Printf("ID: %s\n", loc.ID)
 		if loc.Name != "" {
 			fmt.Printf("  Name: %s\n", loc.Name)
