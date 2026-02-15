@@ -57,3 +57,5 @@ brews:
     homepage: "https://github.com/builtbyrobben/brightlocal-cli"
     description: "BrightLocal local SEO and citation management CLI"
     license: "MIT"
+    test: |
+      system "#{bin}/brightlocal-cli", "--version"
