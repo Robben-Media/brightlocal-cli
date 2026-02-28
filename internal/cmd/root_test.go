@@ -141,6 +141,8 @@ func TestParseCLIStructure(t *testing.T) {
 	_ = cli.Auth
 	_ = cli.Locations
 	_ = cli.Rankings
+	_ = cli.Citations
+	_ = cli.Reports
 	_ = cli.VersionCmd
 }
 
