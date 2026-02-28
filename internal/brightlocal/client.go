@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/builtbyrobben/brightlocal-cli/internal/api"
 )
@@ -13,9 +14,7 @@ var (
 	errBusinessNameRequired = errors.New("business name is required")
 	errLocationRequired     = errors.New("location is required")
 	errSearchTermsRequired  = errors.New("search terms are required")
-	errReportIDRequired     = errors.New("report ID is required")
-	errReportNameRequired   = errors.New("report name is required")
-	errReportTypeRequired   = errors.New("report type is required")
+	errRequestIDRequired    = errors.New("request ID is required")
 )
 
 const defaultBaseURL = "https://api.brightlocal.com/data/v1"
@@ -46,16 +45,6 @@ func (c *Client) Rankings() *RankingsService {
 	return &RankingsService{client: c}
 }
 
-// Citations provides methods for the Citations API.
-func (c *Client) Citations() *CitationsService {
-	return &CitationsService{client: c}
-}
-
-// Reports provides methods for the Reports API.
-func (c *Client) Reports() *ReportsService {
-	return &ReportsService{client: c}
-}
-
 // LocationsService handles location operations.
 type LocationsService struct {
 	client *Client
@@ -84,7 +73,7 @@ type RankingsService struct {
 	client *Client
 }
 
-// Check submits a rankings check request.
+// Check submits a rankings search request.
 func (s *RankingsService) Check(ctx context.Context, req RankingsCheckRequest) (*RankingsCheckResponse, error) {
 	if req.BusinessName == "" {
 		return nil, errBusinessNameRequired
@@ -99,90 +88,24 @@ func (s *RankingsService) Check(ctx context.Context, req RankingsCheckRequest) (
 	}
 
 	var result RankingsCheckResponse
-	if err := s.client.Post(ctx, "/rankings/check", req, &result); err != nil {
+	if err := s.client.Post(ctx, "/rankings/search", req, &result); err != nil {
 		return nil, fmt.Errorf("check rankings: %w", err)
 	}
 
 	return &result, nil
 }
 
-// Get retrieves a rankings report by ID.
-func (s *RankingsService) Get(ctx context.Context, reportID int) (*RankingsGetResponse, error) {
-	if reportID <= 0 {
-		return nil, errReportIDRequired
+// Get retrieves rankings results by request ID.
+func (s *RankingsService) Get(ctx context.Context, requestID string) (*RankingsGetResponse, error) {
+	if requestID == "" {
+		return nil, errRequestIDRequired
 	}
 
 	var result RankingsGetResponse
 
-	path := fmt.Sprintf("/rankings/%d", reportID)
+	path := fmt.Sprintf("/rankings/results/%s", url.PathEscape(requestID))
 	if err := s.client.Get(ctx, path, &result); err != nil {
 		return nil, fmt.Errorf("get rankings: %w", err)
-	}
-
-	return &result, nil
-}
-
-// CitationsService handles citation operations.
-type CitationsService struct {
-	client *Client
-}
-
-// Audit submits a citation audit request.
-func (s *CitationsService) Audit(ctx context.Context, req CitationAuditRequest) (*CitationAuditResponse, error) {
-	if req.BusinessName == "" {
-		return nil, errBusinessNameRequired
-	}
-
-	if req.Location == "" {
-		return nil, errLocationRequired
-	}
-
-	var result CitationAuditResponse
-	if err := s.client.Post(ctx, "/citations/audit", req, &result); err != nil {
-		return nil, fmt.Errorf("audit citations: %w", err)
-	}
-
-	return &result, nil
-}
-
-// ReportsService handles report operations.
-type ReportsService struct {
-	client *Client
-}
-
-// List returns all reports (paginated).
-func (s *ReportsService) List(ctx context.Context, page, pageSize int) (*ReportsListResponse, error) {
-	if page < 1 {
-		page = 1
-	}
-
-	if pageSize < 1 {
-		pageSize = 10
-	}
-
-	path := fmt.Sprintf("/reports?page=%d&page_size=%d", page, pageSize)
-
-	var result ReportsListResponse
-	if err := s.client.Get(ctx, path, &result); err != nil {
-		return nil, fmt.Errorf("list reports: %w", err)
-	}
-
-	return &result, nil
-}
-
-// Create creates a new report.
-func (s *ReportsService) Create(ctx context.Context, req ReportCreateRequest) (*ReportCreateResponse, error) {
-	if req.Name == "" {
-		return nil, errReportNameRequired
-	}
-
-	if req.Type == "" {
-		return nil, errReportTypeRequired
-	}
-
-	var result ReportCreateResponse
-	if err := s.client.Post(ctx, "/reports", req, &result); err != nil {
-		return nil, fmt.Errorf("create report: %w", err)
 	}
 
 	return &result, nil

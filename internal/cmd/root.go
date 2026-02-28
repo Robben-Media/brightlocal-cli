@@ -29,8 +29,6 @@ type CLI struct {
 	Auth       AuthCmd          `cmd:"" help:"Auth and credentials"`
 	Locations  LocationsCmd     `cmd:"" help:"Location search operations"`
 	Rankings   RankingsCmd      `cmd:"" help:"Ranking check operations"`
-	Citations  CitationsCmd     `cmd:"" help:"Citation audit operations"`
-	Reports    ReportsCmd       `cmd:"" help:"Report management"`
 	VersionCmd VersionCmd       `cmd:"" name:"version" help:"Print version"`
 }
 
@@ -146,7 +144,7 @@ func newParser(description string) (*kong.Kong, *CLI, error) {
 }
 
 func helpDescription() string {
-	return "BrightLocal CLI - Local SEO rankings, citations, and reports"
+	return "BrightLocal CLI - Local SEO rankings and location search"
 }
 
 // newUsageError wraps errors in a way main() can map to exit code 2.

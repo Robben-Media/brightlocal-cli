@@ -43,8 +43,8 @@ func TestLocations_Search(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(LocationSearchResponse{
-			Success: true,
-			Locations: []Location{
+			TotalCount: 1,
+			Items: []Location{
 				{ID: "loc-1", Name: "Columbia", City: "Columbia", State: "MO", Country: "USA"},
 			},
 		})
@@ -61,12 +61,12 @@ func TestLocations_Search(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if len(result.Locations) != 1 {
-		t.Fatalf("expected 1 location, got %d", len(result.Locations))
+	if len(result.Items) != 1 {
+		t.Fatalf("expected 1 location, got %d", len(result.Items))
 	}
 
-	if result.Locations[0].ID != "loc-1" {
-		t.Errorf("expected location ID 'loc-1', got %q", result.Locations[0].ID)
+	if result.Items[0].ID != "loc-1" {
+		t.Errorf("expected location ID 'loc-1', got %q", result.Items[0].ID)
 	}
 }
 
@@ -89,7 +89,7 @@ func TestLocations_Search_DefaultLimit(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(LocationSearchResponse{Success: true, Locations: []Location{}})
+		json.NewEncoder(w).Encode(LocationSearchResponse{TotalCount: 0, Items: []Location{}})
 	}))
 	defer server.Close()
 
@@ -109,7 +109,7 @@ func TestRankings_Check(t *testing.T) {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
 
-		if r.URL.Path != "/rankings/check" {
+		if r.URL.Path != "/rankings/search" {
 			t.Errorf("unexpected path: %s", r.URL.Path)
 		}
 
@@ -126,8 +126,8 @@ func TestRankings_Check(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(RankingsCheckResponse{
-			Success:  true,
-			ReportID: 42,
+			Success:   true,
+			RequestID: "abc-123",
 		})
 	}))
 	defer server.Close()
@@ -143,8 +143,8 @@ func TestRankings_Check(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if result.ReportID != 42 {
-		t.Errorf("expected report ID 42, got %d", result.ReportID)
+	if result.RequestID != "abc-123" {
+		t.Errorf("expected request ID 'abc-123', got %q", result.RequestID)
 	}
 }
 
@@ -186,15 +186,15 @@ func TestRankings_Check_MissingTerms(t *testing.T) {
 
 func TestRankings_Get(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/rankings/42" {
-			t.Errorf("expected path /rankings/42, got %s", r.URL.Path)
+		if r.URL.Path != "/rankings/results/abc-123" {
+			t.Errorf("expected path /rankings/results/abc-123, got %s", r.URL.Path)
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(RankingsGetResponse{
-			Success:  true,
-			ReportID: 42,
-			Status:   "completed",
+			Success:   true,
+			RequestID: "abc-123",
+			Status:    "completed",
 			Results: []RankingResult{
 				{SearchTerm: "plumber", Rank: 3},
 			},
@@ -204,7 +204,7 @@ func TestRankings_Get(t *testing.T) {
 
 	client := newTestClient(server)
 
-	result, err := client.Rankings().Get(context.Background(), 42)
+	result, err := client.Rankings().Get(context.Background(), "abc-123")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -222,208 +222,11 @@ func TestRankings_Get(t *testing.T) {
 	}
 }
 
-func TestRankings_Get_ZeroID(t *testing.T) {
+func TestRankings_Get_EmptyID(t *testing.T) {
 	client := &Client{Client: api.NewClient("key")}
 
-	_, err := client.Rankings().Get(context.Background(), 0)
+	_, err := client.Rankings().Get(context.Background(), "")
 	if err == nil {
-		t.Fatal("expected error for zero report ID")
-	}
-}
-
-func TestCitations_Audit(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Errorf("expected POST, got %s", r.Method)
-		}
-
-		if r.URL.Path != "/citations/audit" {
-			t.Errorf("unexpected path: %s", r.URL.Path)
-		}
-
-		var body CitationAuditRequest
-		json.NewDecoder(r.Body).Decode(&body)
-
-		if body.BusinessName != "Test Biz" {
-			t.Errorf("expected business 'Test Biz', got %q", body.BusinessName)
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(CitationAuditResponse{
-			Success:  true,
-			ReportID: 99,
-			Citations: []Citation{
-				{Directory: "Yelp", Status: "found", NAPMatch: true},
-			},
-		})
-	}))
-	defer server.Close()
-
-	client := newTestClient(server)
-
-	result, err := client.Citations().Audit(context.Background(), CitationAuditRequest{
-		BusinessName: "Test Biz",
-		Location:     "Columbia, MO",
-	})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if result.ReportID != 99 {
-		t.Errorf("expected report ID 99, got %d", result.ReportID)
-	}
-
-	if len(result.Citations) != 1 {
-		t.Fatalf("expected 1 citation, got %d", len(result.Citations))
-	}
-
-	if result.Citations[0].Directory != "Yelp" {
-		t.Errorf("expected directory 'Yelp', got %q", result.Citations[0].Directory)
-	}
-}
-
-func TestCitations_Audit_MissingBusiness(t *testing.T) {
-	client := &Client{Client: api.NewClient("key")}
-
-	_, err := client.Citations().Audit(context.Background(), CitationAuditRequest{
-		Location: "Columbia, MO",
-	})
-	if err == nil {
-		t.Fatal("expected error for missing business name")
-	}
-}
-
-func TestCitations_Audit_MissingLocation(t *testing.T) {
-	client := &Client{Client: api.NewClient("key")}
-
-	_, err := client.Citations().Audit(context.Background(), CitationAuditRequest{
-		BusinessName: "Test",
-	})
-	if err == nil {
-		t.Fatal("expected error for missing location")
-	}
-}
-
-func TestReports_List(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/reports" {
-			t.Errorf("unexpected path: %s", r.URL.Path)
-		}
-
-		if r.URL.Query().Get("page") != "1" {
-			t.Errorf("expected page=1, got %s", r.URL.Query().Get("page"))
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(ReportsListResponse{
-			Success: true,
-			Reports: []Report{
-				{ID: 1, Name: "Test Report", Type: "rankings", Status: "active"},
-			},
-			Page:       1,
-			PageSize:   10,
-			TotalItems: 1,
-		})
-	}))
-	defer server.Close()
-
-	client := newTestClient(server)
-
-	result, err := client.Reports().List(context.Background(), 1, 10)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if len(result.Reports) != 1 {
-		t.Fatalf("expected 1 report, got %d", len(result.Reports))
-	}
-
-	if result.Reports[0].Name != "Test Report" {
-		t.Errorf("expected name 'Test Report', got %q", result.Reports[0].Name)
-	}
-}
-
-func TestReports_List_DefaultPagination(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Query().Get("page") != "1" {
-			t.Errorf("expected page=1 default, got %s", r.URL.Query().Get("page"))
-		}
-
-		if r.URL.Query().Get("page_size") != "10" {
-			t.Errorf("expected page_size=10 default, got %s", r.URL.Query().Get("page_size"))
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(ReportsListResponse{Success: true, Reports: []Report{}})
-	}))
-	defer server.Close()
-
-	client := newTestClient(server)
-
-	_, err := client.Reports().List(context.Background(), 0, 0)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestReports_Create(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Errorf("expected POST, got %s", r.Method)
-		}
-
-		var body ReportCreateRequest
-		json.NewDecoder(r.Body).Decode(&body)
-
-		if body.Name != "My Report" {
-			t.Errorf("expected name 'My Report', got %q", body.Name)
-		}
-
-		if body.Type != "rankings" {
-			t.Errorf("expected type 'rankings', got %q", body.Type)
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(ReportCreateResponse{
-			Success:  true,
-			ReportID: 55,
-		})
-	}))
-	defer server.Close()
-
-	client := newTestClient(server)
-
-	result, err := client.Reports().Create(context.Background(), ReportCreateRequest{
-		Name: "My Report",
-		Type: "rankings",
-	})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if result.ReportID != 55 {
-		t.Errorf("expected report ID 55, got %d", result.ReportID)
-	}
-}
-
-func TestReports_Create_MissingName(t *testing.T) {
-	client := &Client{Client: api.NewClient("key")}
-
-	_, err := client.Reports().Create(context.Background(), ReportCreateRequest{
-		Type: "rankings",
-	})
-	if err == nil {
-		t.Fatal("expected error for missing report name")
-	}
-}
-
-func TestReports_Create_MissingType(t *testing.T) {
-	client := &Client{Client: api.NewClient("key")}
-
-	_, err := client.Reports().Create(context.Background(), ReportCreateRequest{
-		Name: "Test",
-	})
-	if err == nil {
-		t.Fatal("expected error for missing report type")
+		t.Fatal("expected error for empty request ID")
 	}
 }

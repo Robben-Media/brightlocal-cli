@@ -20,8 +20,8 @@ type Location struct {
 
 // LocationSearchResponse is the response for location search.
 type LocationSearchResponse struct {
-	Success   bool       `json:"success"`
-	Locations []Location `json:"locations"`
+	TotalCount int        `json:"total_count"`
+	Items      []Location `json:"items"`
 }
 
 // RankingsCheckRequest is the request body for checking rankings.
@@ -41,66 +41,15 @@ type RankingResult struct {
 
 // RankingsCheckResponse is the response for rankings check.
 type RankingsCheckResponse struct {
-	Success  bool            `json:"success"`
-	ReportID int             `json:"report_id"`
-	Results  []RankingResult `json:"results,omitempty"`
+	Success   bool            `json:"success"`
+	RequestID string          `json:"request_id"`
+	Results   []RankingResult `json:"results,omitempty"`
 }
 
 // RankingsGetResponse is the response for getting a rankings report.
 type RankingsGetResponse struct {
-	Success  bool            `json:"success"`
-	ReportID int             `json:"report_id"`
-	Status   string          `json:"status"`
-	Results  []RankingResult `json:"results,omitempty"`
-}
-
-// CitationAuditRequest is the request body for a citation audit.
-type CitationAuditRequest struct {
-	BusinessName string `json:"business_name"`
-	Location     string `json:"location"`
-}
-
-// Citation represents a single citation entry.
-type Citation struct {
-	Directory string `json:"directory"`
-	URL       string `json:"url,omitempty"`
-	Status    string `json:"status,omitempty"`
-	NAPMatch  bool   `json:"nap_match"`
-}
-
-// CitationAuditResponse is the response for a citation audit.
-type CitationAuditResponse struct {
-	Success   bool       `json:"success"`
-	ReportID  int        `json:"report_id"`
-	Citations []Citation `json:"citations,omitempty"`
-}
-
-// Report represents a BrightLocal report.
-type Report struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	Status    string `json:"status,omitempty"`
-	CreatedAt string `json:"created_at,omitempty"`
-}
-
-// ReportsListResponse is the paginated response for listing reports.
-type ReportsListResponse struct {
-	Success    bool     `json:"success"`
-	Reports    []Report `json:"reports"`
-	Page       int      `json:"page"`
-	PageSize   int      `json:"page_size"`
-	TotalItems int      `json:"total_items"`
-}
-
-// ReportCreateRequest is the request body for creating a report.
-type ReportCreateRequest struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
-}
-
-// ReportCreateResponse is the response for creating a report.
-type ReportCreateResponse struct {
-	Success  bool `json:"success"`
-	ReportID int  `json:"report_id"`
+	Success   bool            `json:"success"`
+	RequestID string          `json:"request_id"`
+	Status    string          `json:"status"`
+	Results   []RankingResult `json:"results,omitempty"`
 }
