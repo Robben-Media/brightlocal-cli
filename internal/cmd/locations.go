@@ -37,6 +37,14 @@ func (cmd *LocationsSearchCmd) Run(ctx context.Context) error {
 	if outfmt.IsJSON(ctx) {
 		return outfmt.WriteJSON(os.Stdout, result)
 	}
+	if outfmt.IsPlain(ctx) {
+		headers := []string{"ID", "NAME", "ADDRESS", "CITY", "STATE", "COUNTRY"}
+		var rows [][]string
+		for _, loc := range result.Locations {
+			rows = append(rows, []string{loc.ID, loc.Name, loc.Address, loc.City, loc.State, loc.Country})
+		}
+		return outfmt.WritePlain(os.Stdout, headers, rows)
+	}
 
 	if len(result.Locations) == 0 {
 		fmt.Fprintln(os.Stderr, "No locations found")

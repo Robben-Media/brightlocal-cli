@@ -12,7 +12,7 @@ import (
 
 type RankingsCmd struct {
 	Check RankingsCheckCmd `cmd:"" help:"Check rankings for a business"`
-	Get   RankingsGetCmd   `cmd:"" help:"Get a rankings report by ID"`
+	Get   RankingsGetCmd   `cmd:"" help:"Get rankings results by report ID"`
 }
 
 type RankingsCheckCmd struct {
@@ -46,6 +46,18 @@ func (cmd *RankingsCheckCmd) Run(ctx context.Context) error {
 
 	if outfmt.IsJSON(ctx) {
 		return outfmt.WriteJSON(os.Stdout, result)
+	}
+	if outfmt.IsPlain(ctx) {
+		reportID := fmt.Sprintf("%d", result.ReportID)
+		headers := []string{"REPORT_ID", "TERM", "RANK", "URL", "SOURCE"}
+		var rows [][]string
+		for _, r := range result.Results {
+			rows = append(rows, []string{reportID, r.SearchTerm, fmt.Sprintf("%d", r.Rank), r.URL, r.Source})
+		}
+		if len(rows) == 0 {
+			rows = append(rows, []string{reportID, "", "", "", ""})
+		}
+		return outfmt.WritePlain(os.Stdout, headers, rows)
 	}
 
 	fmt.Fprintf(os.Stderr, "Rankings check submitted\n\n")
@@ -85,6 +97,18 @@ func (cmd *RankingsGetCmd) Run(ctx context.Context) error {
 
 	if outfmt.IsJSON(ctx) {
 		return outfmt.WriteJSON(os.Stdout, result)
+	}
+	if outfmt.IsPlain(ctx) {
+		reportID := fmt.Sprintf("%d", result.ReportID)
+		headers := []string{"REPORT_ID", "STATUS", "TERM", "RANK", "URL", "SOURCE"}
+		var rows [][]string
+		for _, r := range result.Results {
+			rows = append(rows, []string{reportID, result.Status, r.SearchTerm, fmt.Sprintf("%d", r.Rank), r.URL, r.Source})
+		}
+		if len(rows) == 0 {
+			rows = append(rows, []string{reportID, result.Status, "", "", "", ""})
+		}
+		return outfmt.WritePlain(os.Stdout, headers, rows)
 	}
 
 	fmt.Printf("Report ID: %d\n", result.ReportID)
