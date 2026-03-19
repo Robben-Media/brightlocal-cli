@@ -29,6 +29,8 @@ type CLI struct {
 	Auth       AuthCmd          `cmd:"" help:"Auth and credentials"`
 	Locations  LocationsCmd     `cmd:"" help:"Location search operations"`
 	Rankings   RankingsCmd      `cmd:"" help:"Ranking check operations"`
+	LRT        LRTCmd           `cmd:"" help:"Local Rank Tracker operations"`
+	Clients    ClientsCmd       `cmd:"" help:"Client management"`
 	VersionCmd VersionCmd       `cmd:"" name:"version" help:"Print version"`
 }
 
