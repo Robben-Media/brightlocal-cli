@@ -45,10 +45,25 @@ jobs:
       - name: Build (CGO enabled for keyring)
         run: CGO_ENABLED=1 go build -o bin/brightlocal-cli ./cmd/brightlocal
 
-      - name: Test keyring
+      - name: Probe native macOS empty-keyring status
+        timeout-minutes: 1
+        shell: bash
+        env:
+          BRIGHTLOCAL_CLI_KEYRING_BACKEND: keychain
+        run: |
+          ./bin/brightlocal-cli --json auth status | python3 -c 'import json, sys; s = json.load(sys.stdin); assert s["has_key"] is False and s["env_override"] is False'
+
+      - name: Test headless encrypted credential storage
+        timeout-minutes: 1
+        shell: bash
+        env:
+          BRIGHTLOCAL_CLI_KEYRING_BACKEND: file
+          BRIGHTLOCAL_CLI_KEYRING_PASS: ci-only-dummy-password
         run: |
           echo "testkey" | ./bin/brightlocal-cli auth set-key --stdin
-          ./bin/brightlocal-cli auth status
+          ./bin/brightlocal-cli --json auth status | python3 -c 'import json, sys; s = json.load(sys.stdin); assert s["has_key"] is True and s["env_override"] is False'
+          ./bin/brightlocal-cli auth remove
+          ./bin/brightlocal-cli --json auth status | python3 -c 'import json, sys; s = json.load(sys.stdin); assert s["has_key"] is False and s["env_override"] is False'
 
   build-windows:
     runs-on: windows-latest

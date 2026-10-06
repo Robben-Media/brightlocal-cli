@@ -55,7 +55,6 @@ func (cmd *RankingsCheckCmd) Run(ctx context.Context) error {
 		}
 		if len(rows) == 0 {
 			rows = append(rows, []string{result.RequestID, "", "", "", ""})
-
 		}
 		return outfmt.WritePlain(os.Stdout, headers, rows)
 	}
@@ -106,7 +105,6 @@ func (cmd *RankingsGetCmd) Run(ctx context.Context) error {
 		}
 		if len(rows) == 0 {
 			rows = append(rows, []string{result.RequestID, result.Status, "", "", "", ""})
-
 		}
 		return outfmt.WritePlain(os.Stdout, headers, rows)
 	}
